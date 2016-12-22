@@ -14,8 +14,8 @@ TEXT="$FOLDER/text.png"
 PARAMS=""
 OUTPUT_IMAGE="/tmp/i3lock.png"
 
-#Take screenshot:
-scrot -z $OUTPUT_IMAGE
+#Use background image :
+cp /home/$USER/.config/i3lock-multimonitor/arch.png /tmp/i3lock.png
 
 #Get dimensions of the lock image:
 LOCK_IMAGE_INFO=`identify $LOCK`
