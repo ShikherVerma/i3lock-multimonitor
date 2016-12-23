@@ -21,7 +21,7 @@ git clone https://github.com/shikherverma/i3lock-multimonitor.git
 cp -r i3lock-multimonitor ~/.i3
 chmod +x ~/.i3/i3lock-multimonitor/lock
 ```
-Add a env variable in your `~/.bashrc` by running :
+Add a env variable in your `~/.bashrc` by running :  
 Note - you have to replace `<path to some image>` in the command below with your own path
 ```
 echo "export I3LOCK_BACKGROUND=<path to some image>" >> .bashrc

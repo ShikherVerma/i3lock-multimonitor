@@ -6,9 +6,33 @@ LOCK="$FOLDER/lock.png"
 TEXT="$FOLDER/text.png"
 PARAMS=""
 OUTPUT_IMAGE="/tmp/i3lock.png"
+PROCESSING_IMAGE="/tmp/i3lock_proc.png"
+MONITOR_COUNT=0
 
-#Use background image :
-cp $I3LOCK_BACKGROUND $OUTPUT_IMAGE
+#Make custom lockscreen image using $I3LOCK_BACKGROUND screen size :
+while read LINE
+do
+  #If we are reading the line that contains the position information:
+  if [[ $LINE =~ $DISPLAY_RE ]]; then
+    #Extract information and append some parameters to the ones that will be given to ImageMagick:
+    WIDTH=${BASH_REMATCH[1]}
+    HEIGHT=${BASH_REMATCH[2]}
+    X=${BASH_REMATCH[3]}
+    Y=${BASH_REMATCH[4]}
+    MONITOR_COUNT=$((MONITOR_COUNT+1))
+    if [[ "$MONITOR_COUNT" == "1" ]]; then
+	    eval convert $I3LOCK_BACKGROUND -resize ${WIDTH}x${HEIGHT}! $OUTPUT_IMAGE
+    else
+            OUTPUT_IMAGE_INFO=`identify $OUTPUT_IMAGE`
+	    [[ $OUTPUT_IMAGE_INFO =~ $IMAGE_RE ]]
+	    OUTPUT_IMAGE_WIDTH=${BASH_REMATCH[1]}
+	    OUTPUT_IMAGE_HEIGHT=${BASH_REMATCH[2]}
+	    eval convert $OUTPUT_IMAGE -extent $((OUTPUT_IMAGE_WIDTH+WIDTH))x$HEIGHT $OUTPUT_IMAGE
+            eval convert $I3LOCK_BACKGROUND -resize ${WIDTH}X${HEIGHT}! $PROCESSING_IMAGE
+            eval convert $OUTPUT_IMAGE $PROCESSING_IMAGE -geometry +$X+$Y -composite $OUTPUT_IMAGE
+    fi;
+  fi
+done <<<"`xrandr`"
 
 #Get dimensions of the lock image:
 LOCK_IMAGE_INFO=`identify $LOCK`
@@ -50,3 +74,4 @@ i3lock -i $OUTPUT_IMAGE -t
 
 #Remove the generated image:
 rm $OUTPUT_IMAGE
+rm $PROCESSING_IMAGE
