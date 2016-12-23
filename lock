@@ -57,7 +57,7 @@ do
 done <<<"`xrandr`"
 
 #Execute ImageMagick:
-PARAMS="'$OUTPUT_IMAGE' '-level' '0%,100%,0.6' $PARAMS '$OUTPUT_IMAGE'"
+PARAMS="'$OUTPUT_IMAGE' $PARAMS '$OUTPUT_IMAGE'"
 eval convert $PARAMS
 
 #Lock the screen:
