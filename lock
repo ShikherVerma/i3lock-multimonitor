@@ -1,43 +1,26 @@
 #!/bin/bash
-DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)"
-IMAGE_RE="([0-9]+)x([0-9]+)"
-FOLDER=`dirname "$BASH_SOURCE"`
-TEXT="$FOLDER/text.png"
-PARAMS=""
-OUTPUT_IMAGE="/tmp/i3lock.png"
-PROCESSING_IMAGE="/tmp/i3lock_proc.png"
-MONITOR_COUNT=0
 
-#Make custom lockscreen image using $I3LOCK_BACKGROUND screen size :
-while read LINE
-do
-  #If we are reading the line that contains the position information:
-  if [[ $LINE =~ $DISPLAY_RE ]]; then
-    #Extract information and append some parameters to the ones that will be given to ImageMagick:
-    WIDTH=${BASH_REMATCH[1]}
-    HEIGHT=${BASH_REMATCH[2]}
-    X=${BASH_REMATCH[3]}
-    Y=${BASH_REMATCH[4]}
-    MONITOR_COUNT=$((MONITOR_COUNT+1))
-    if [[ "$MONITOR_COUNT" == "1" ]]; then
-	    eval convert $I3LOCK_BACKGROUND -resize ${WIDTH}x${HEIGHT}! $OUTPUT_IMAGE
-    else
-            OUTPUT_IMAGE_INFO=`identify $OUTPUT_IMAGE`
-	    [[ $OUTPUT_IMAGE_INFO =~ $IMAGE_RE ]]
-	    OUTPUT_IMAGE_WIDTH=${BASH_REMATCH[1]}
-	    OUTPUT_IMAGE_HEIGHT=${BASH_REMATCH[2]}
-	    eval convert $OUTPUT_IMAGE -extent $((OUTPUT_IMAGE_WIDTH+WIDTH))x$HEIGHT $OUTPUT_IMAGE
-            eval convert $I3LOCK_BACKGROUND -resize ${WIDTH}X${HEIGHT}! $PROCESSING_IMAGE
-            eval convert $OUTPUT_IMAGE $PROCESSING_IMAGE -geometry +$X+$Y -composite $OUTPUT_IMAGE
-    fi;
-  fi
-done <<<"`xrandr`"
+#Constants
+DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dimensions
+IMAGE_RE="([0-9]+)x([0-9]+)"    # Regex to find image dimensions
+FOLDER=`dirname "$BASH_SOURCE"` # Current folder
+CACHE_FOLDER="$FOLDER"/img/cache/ # Cache folder
 
-#Get dimensions of the text image:
-TEXT_IMAGE_INFO=`identify $TEXT`
-[[ $TEXT_IMAGE_INFO =~ $IMAGE_RE ]]
-TEXT_WIDTH=${BASH_REMATCH[1]}
-TEXT_HEIGHT=${BASH_REMATCH[2]}
+#Image paths
+BKG_IMG="$FOLDER/img/background.png" # Path of background image
+MD5_BKG_IMG=$(md5sum $BKG_IMG | cut -c 1-10)
+TEXT_IMG="$FOLDER/img/text.png" # Path of text image
+MD5_TEXT_IMG=$(md5sum $TEXT_IMG | cut -c 1-10)
+MD5_SCREEN_CONFIG=$(xrandr | md5sum - | cut -c 1-32) # Hash of xrandr output
+OUTPUT_IMG="$CACHE_FOLDER""$MD5_SCREEN_CONFIG"."$MD5_BKG_IMG"."$MD5_TEXT_IMG".png # Path of final image
+OUTPUT_IMG_WIDTH=0 # Decide size to cover all screens
+OUTPUT_IMG_HEIGHT=0 # Decide size to cover all screens
+
+if [ -e $OUTPUT_IMG ]
+then
+    # Lock screen since image already exists
+    i3lock --image=$OUTPUT_IMG --tiling --show-failed-attempts
+fi
 
 #Execute xrandr to get information about the monitors:
 while read LINE
@@ -45,24 +28,42 @@ do
   #If we are reading the line that contains the position information:
   if [[ $LINE =~ $DISPLAY_RE ]]; then
     #Extract information and append some parameters to the ones that will be given to ImageMagick:
-    WIDTH=${BASH_REMATCH[1]}
-    HEIGHT=${BASH_REMATCH[2]}
-    X=${BASH_REMATCH[3]}
-    Y=${BASH_REMATCH[4]}
-    TEXT_X=$(($X+$WIDTH/2-$TEXT_WIDTH/2))
-    TEXT_Y=$(($Y+$HEIGHT/2-$TEXT_HEIGHT/2+200))
+    SCREEN_WIDTH=${BASH_REMATCH[1]}
+    SCREEN_HEIGHT=${BASH_REMATCH[2]}
+    SCREEN_X=${BASH_REMATCH[3]}
+    SCREEN_Y=${BASH_REMATCH[4]}
+    
+    CACHE_IMG="$CACHE_FOLDER""$SCREEN_WIDTH"x"$SCREEN_HEIGHT"."$MD5_BKG_IMG"."$MD5_TEXT_IMG".png
+    ## if cache for that screensize doesnt exist
+    if ! [ -e $CACHE_IMG ]
+    then
+	# if this is the first time cache was not hit then
+	if ! [ $(echo $TEXT_IMG_INFO) ]
+	then	
+	    #Get dimensions of the text image
+	    TEXT_IMG_INFO=`identify $TEXT_IMG`
+	    [[ $TEXT_IMG_INFO =~ $IMAGE_RE ]]
+	    TEXT_IMG_WIDTH=${BASH_REMATCH[1]}
+	    TEXT_IMG_HEIGHT=${BASH_REMATCH[2]}
+        fi
+	# Create image for that screensize
+        TEXT_X=$(($X+$SCREEN_WIDTH/2-$TEXT_IMG_WIDTH/2))
+        TEXT_Y=$(($Y+$SCREEN_HEIGHT/2-$TEXT_IMG_HEIGHT/2+200))
+        eval convert '\(' '$BKG_IMG' '-resize' '${SCREEN_WIDTH}X${SCREEN_HEIGHT}!' '\)' \
+		'\(' '$TEXT_IMG' '-geometry' '+$TEXT_X+$TEXT_Y' '\)' '-composite' '$CACHE_IMG'
+    fi
 
-    PARAMS="$PARAMS '$TEXT' '-geometry' '+$TEXT_X+$TEXT_Y' '-composite'"
+    # Decide size of output image
+    if (( $OUTPUT_IMG_WIDTH < $SCREEN_WIDTH+$SCREEN_X )); then OUTPUT_IMG_WIDTH=$(($SCREEN_WIDTH+$SCREEN_X)); fi;
+    if (( $OUTPUT_IMG_HEIGHT < $SCREEN_HEIGHT+$SCREEN_Y )); then OUTPUT_IMG_HEIGHT=$(( $SCREEN_HEIGHT+$SCREEN_Y )); fi;
+
+    PARAMS="$PARAMS $CACHE_IMG -geometry +$SCREEN_X+$SCREEN_Y -composite "
   fi
 done <<<"`xrandr`"
 
 #Execute ImageMagick:
-PARAMS="'$OUTPUT_IMAGE' $PARAMS '$OUTPUT_IMAGE'"
-eval convert $PARAMS
+eval convert -size ${OUTPUT_IMG_WIDTH}x${OUTPUT_IMG_HEIGHT} 'xc:black' $OUTPUT_IMG
+eval convert $OUTPUT_IMG $PARAMS $OUTPUT_IMG
 
 #Lock the screen:
-i3lock -i $OUTPUT_IMAGE -t
-
-#Remove the generated image:
-rm $OUTPUT_IMAGE
-rm $PROCESSING_IMAGE
+i3lock --image=$OUTPUT_IMG --tiling --show-failed-attempts
