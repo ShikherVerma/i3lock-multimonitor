@@ -20,6 +20,7 @@ if [ -e $OUTPUT_IMG ]
 then
     # Lock screen since image already exists
     i3lock --image=$OUTPUT_IMG --tiling --show-failed-attempts
+    exit 0
 fi
 
 #Execute xrandr to get information about the monitors:
