@@ -1,7 +1,6 @@
 # i3lock-multimonitor
 This is a script which uses a background image, resizes it to show correctly on any multimonitor setup.
 
-Inline-style: 
 ![i3lock-multimonitor-demo](./i3lock-multimonitor-demo.png "i3lock-multimonitor-demo.png")
 
 The idea for this project was shamelessly copied from [guimeira](https://github.com/guimeira)'s [i3lock-fancy-multimonitor](https://github.com/guimeira/i3lock-fancy-multimonitor).
