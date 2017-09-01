@@ -1,30 +1,62 @@
-# i3lock-multimonitor
-This is a script which uses a background image, resizes it to show correctly on any multimonitor setup.
+# i3lock-multimonitor-no-text-img
+Forked from [ShikherVerma](https://github.com/ShikherVerma)'s [i3lock-multimonitor](https://github.com/ShikherVerma/i3lock-multimonitor).
+Basically allows a bit more freedom with the background image for the lockscreen.
 
-![i3lock-multimonitor-demo](./i3lock-multimonitor-demo.png "i3lock-multimonitor-demo.png")
-
-The idea for this project was shamelessly copied from [guimeira](https://github.com/guimeira)'s [i3lock-fancy-multimonitor](https://github.com/guimeira/i3lock-fancy-multimonitor).
-
-It uses [ImageMagick](http://www.imagemagick.org/) to resize the [background image](./img/background.png) and show a [lock message](./img/text.png). You can replace these images to change background and lock message.
-
-By using information from [xrandr](http://www.x.org/wiki/Projects/XRandR/) and basic math, this script supports multiple monitor setups, displaying the background image and text centered on all screens.
-
-It caches the generated image for different screen sizes and xrandr output. So even though first `lock` command will take a second to finish, subsequent `lock` will be lighting fast.
+It uses [ImageMagick](http://www.imagemagick.org/) to manipulate the given background image and [xrandr](http://www.x.org/wiki/Projects/XRandR/) to gather information about the displays.
 
 ## Installation
-Make sure you have all the dependencies:
-Note - Instructions are for Ubuntu since its the most popular linux distro.
+1. Generally it requires only `ImageMagick` and `i3lock`:
 ```
 sudo apt-get install imagemagick i3lock
 ```
-Copy the `lock` script along with the images to some place on your system (e.g.: the i3 folder) and give it execution permission:
+2. Clone the repository to your local machine and `cd` into the created directory:
 ```
-git clone https://github.com/shikherverma/i3lock-multimonitor.git
-cp -r i3lock-multimonitor ~/.i3
-chmod +x ~/.i3/i3lock-multimonitor/lock
+git clone https://github.com/eyal0803/i3lock-multimonitor.git
+cd i3lock-multimonitor
 ```
-Create a key binding on your i3 config file (in this example I'm using $mod+p):
+3. Copy the `lock` script (and the `background.png` image included, if you're not gonna pass a parameter) to some place on your system (e.g.: the i3 folder, usually: `~/.config/i3/`):
 ```
-echo "bindsym \$mod+p exec /home/$USER/.i3/i3lock-multimonitor/lock" >> ~/.i3/config
+mkdir ~/.config/i3/i3lock
+cp lock ~/.config/i3/i3lock
+cp background.png ~/.config/i3/i3lock
 ```
-Now reload the i3 configuration file. By default, the key binding is `$mod+Shift+c`.
+4. Give the `lock` script execution permissions:
+```
+chmod +x ~/.config/i3/i3lock/lock
+```
+
+## Usage
+```
+./lock
+```
+With image argument:
+```
+./lock -i ~/Pictures/dog_on_a_bicycle.png
+```
+With arguments for `i3lock`:
+```
+./lock -a "-t -p default -e --insidecolor=FF0000FF"
+```
+Keep in mind that you're no passing the full `i3lock` command, only the arguments for it.
+Also, no need to pass it the `-i` argument since you're passing it to my script (and I pass it over to `i3lock`). You may try though, I don't think it'll break anything.
+
+An example with both:
+```
+./lock -i ~/Pictures/dog_on_a_bicycle.png -a "-t -p default -e --insidecolor=FF0000FF"
+```
+
+## Keybinding
+You may also create a keybinding (shortcut) to activate the lockscreen. In your `~/.config/i3/config`:
+```
+bindsym $mod+l exec "$HOME/.config/i3/i3lock/lock"
+```
+Be sure to restart i3 by pressing (default) `$mod+Shift+r` right after.
+
+# Notes
+**Important:** Since i3lock accepts only images of PNG format my script also accepts only PNG.
+
+I included an image so the script won't crash on your first try.
+## Additions and Changes
+Added option for passing argument for the path to the image and the argument for the `i3lock` command.
+
+Keeping the aspect ratio of the given image.
