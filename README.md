@@ -11,14 +11,14 @@ sudo apt-get install imagemagick i3lock
 ```
 2. Clone the repository to your local machine and `cd` into the created directory:
 ```
-git clone https://github.com/eyal0803/i3lock-multimonitor.git  # Clone the repository
-cd i3lock-multimonitor  # cd into the cloned folder
+git clone https://github.com/eyal0803/i3lock-multimonitor.git
+cd i3lock-multimonitor
 ```
-3. Copy the `lock` script (and the `background.png` image included, if you're not planning on giving a parameter) to some place on your system (e.g.: the i3 folder, usually: `~/.config/i3/`):
+3. Copy the `lock` script (and the `background.png` image included, if you're not gonna pass a parameter) to some place on your system (e.g.: the i3 folder, usually: `~/.config/i3/`):
 ```
-mkdir ~/.config/i3/i3lock  # Just make a new folder for the sake of order
-cp lock ~/.config/i3/i3lock  # Copy the lock script
-cp background.png ~/.config/i3/i3lock  # Optional. You may pass an argument to the lock script instead
+mkdir ~/.config/i3/i3lock
+cp lock ~/.config/i3/i3lock
+cp background.png ~/.config/i3/i3lock
 ```
 4. Give the `lock` script execution permissions:
 ```
@@ -37,7 +37,7 @@ With arguments for `i3lock`:
 ```
 ./lock -a "-t -p default -e --insidecolor=FF0000FF"
 ```
-Keep in mind that it is not the full `i3lock` command, only the arguments for it.
+Keep in mind that you're no passing the full `i3lock` command, only the arguments for it.
 Also, no need to pass it the `-i` argument since you're passing it to my script (and I pass it over to `i3lock`). You may try though, I don't think it'll break anything.
 
 An example with both:
@@ -58,4 +58,5 @@ Be sure to restart i3 by pressing (default) `$mod+Shift+r` right after.
 I included an image so the script won't crash on your first try.
 ## Additions and Changes
 Added option for passing argument for the path to the image and the argument for the `i3lock` command.
+
 Keeping the aspect ratio of the given image.
