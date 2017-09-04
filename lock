@@ -2,24 +2,55 @@
 
 #Constants
 DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dimensions
-IMAGE_RE="([0-9]+)x([0-9]+)"    # Regex to find image dimensions
 FOLDER=`dirname "$BASH_SOURCE"` # Current folder
 CACHE_FOLDER="$FOLDER"/img/cache/ # Cache folder
+if ! [ -e $CACHE_FOLDER ]; then
+    mkdir $CACHE_FOLDER
+fi
+
+#Passed arguments
+while getopts ":i:a:" opt; do
+    case $opt in
+        i) arg_image="$OPTARG"
+        ;;
+        a) lock_args="$OPTARG"
+        ;;
+        \?) echo "Invalid option -$OPTARG" >&2 && exit 1
+        ;;
+    esac
+done
 
 #Image paths
-BKG_IMG="$FOLDER/img/background.png" # Path of background image
+if [ "$arg_image" ]; then
+    BKG_IMG="$arg_image"  # Passed image
+else
+    BKG_IMG="$FOLDER/img/background.png"  # Default
+fi
+
+if ! [ -e "$BKG_IMG" ]; then
+    echo "No background image! Exiting..."
+    exit 2
+fi
+
 MD5_BKG_IMG=$(md5sum $BKG_IMG | cut -c 1-10)
-TEXT_IMG="$FOLDER/img/text.png" # Path of text image
-MD5_TEXT_IMG=$(md5sum $TEXT_IMG | cut -c 1-10)
 MD5_SCREEN_CONFIG=$(xrandr | md5sum - | cut -c 1-32) # Hash of xrandr output
-OUTPUT_IMG="$CACHE_FOLDER""$MD5_SCREEN_CONFIG"."$MD5_BKG_IMG"."$MD5_TEXT_IMG".png # Path of final image
+OUTPUT_IMG="$CACHE_FOLDER""$MD5_SCREEN_CONFIG"."$MD5_BKG_IMG".png # Path of final image
 OUTPUT_IMG_WIDTH=0 # Decide size to cover all screens
 OUTPUT_IMG_HEIGHT=0 # Decide size to cover all screens
+
+#i3lock command
+LOCK_BASE_CMD="i3lock -i $OUTPUT_IMG"
+if [ "$lock_args" ]; then
+        LOCK_ARGS="$lock_args"  # Passed command
+else
+        LOCK_ARGS="-t -e"  # Default
+fi
+LOCK_CMD="$LOCK_BASE_CMD $LOCK_ARGS"
 
 if [ -e $OUTPUT_IMG ]
 then
     # Lock screen since image already exists
-    i3lock --image=$OUTPUT_IMG --tiling --show-failed-attempts
+    $LOCK_CMD
     exit 0
 fi
 
@@ -34,24 +65,12 @@ do
     SCREEN_X=${BASH_REMATCH[3]}
     SCREEN_Y=${BASH_REMATCH[4]}
     
-    CACHE_IMG="$CACHE_FOLDER""$SCREEN_WIDTH"x"$SCREEN_HEIGHT"."$MD5_BKG_IMG"."$MD5_TEXT_IMG".png
+    CACHE_IMG="$CACHE_FOLDER""$SCREEN_WIDTH"x"$SCREEN_HEIGHT"."$MD5_BKG_IMG".png
     ## if cache for that screensize doesnt exist
     if ! [ -e $CACHE_IMG ]
     then
-	# if this is the first time cache was not hit then
-	if ! [ $(echo $TEXT_IMG_INFO) ]
-	then	
-	    #Get dimensions of the text image
-	    TEXT_IMG_INFO=`identify $TEXT_IMG`
-	    [[ $TEXT_IMG_INFO =~ $IMAGE_RE ]]
-	    TEXT_IMG_WIDTH=${BASH_REMATCH[1]}
-	    TEXT_IMG_HEIGHT=${BASH_REMATCH[2]}
-        fi
 	# Create image for that screensize
-        TEXT_X=$(($X+$SCREEN_WIDTH/2-$TEXT_IMG_WIDTH/2))
-        TEXT_Y=$(($Y+$SCREEN_HEIGHT/2-$TEXT_IMG_HEIGHT/2+200))
-        eval convert '\(' '$BKG_IMG' '-resize' '${SCREEN_WIDTH}X${SCREEN_HEIGHT}!' '\)' \
-		'\(' '$TEXT_IMG' '-geometry' '+$TEXT_X+$TEXT_Y' '\)' '-composite' '$CACHE_IMG'
+        eval convert '$BKG_IMG' '-resize' '${SCREEN_WIDTH}X${SCREEN_HEIGHT}^' '-gravity' 'Center' '-crop' '${SCREEN_WIDTH}X${SCREEN_HEIGHT}+0+0' '+repage' '$CACHE_IMG'
     fi
 
     # Decide size of output image
@@ -67,4 +86,4 @@ eval convert -size ${OUTPUT_IMG_WIDTH}x${OUTPUT_IMG_HEIGHT} 'xc:black' $OUTPUT_I
 eval convert $OUTPUT_IMG $PARAMS $OUTPUT_IMG
 
 #Lock the screen:
-i3lock --image=$OUTPUT_IMG --tiling --show-failed-attempts
+$LOCK_CMD
