@@ -20,7 +20,7 @@ sudo apt-get install imagemagick i3lock
 Copy the `lock` script along with the images to some place on your system (e.g.: the i3 folder) and give it execution permission:
 ```
 git clone https://github.com/shikherverma/i3lock-multimonitor.git
-cp -r i3lock-multimonitor ~/.i3
+cp -r i3lock-multimonitor ~/.i3/
 chmod +x ~/.i3/i3lock-multimonitor/lock
 ```
 Create a key binding on your i3 config file (in this example I'm using $mod+p):
