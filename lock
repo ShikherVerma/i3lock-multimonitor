@@ -5,7 +5,7 @@ DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dim
 FOLDER=`dirname "$BASH_SOURCE"` # Current folder
 CACHE_FOLDER="$FOLDER"/img/cache/ # Cache folder
 if ! [ -e $CACHE_FOLDER ]; then
-    mkdir $CACHE_FOLDER
+    mkdir -p $CACHE_FOLDER
 fi
 
 #Passed arguments
