@@ -8,11 +8,14 @@ if ! [ -e $CACHE_FOLDER ]; then
 fi
 
 #Passed arguments
-while getopts ":i:a:" opt; do
+while getopts ":i:a:d:" opt; do
     case $opt in
         i) arg_image="$OPTARG"
         ;;
         a) lock_args="$OPTARG"
+        ;;
+        d) lock_cmd=":"
+           arg_image="$OPTARG"
         ;;
         \?) echo "Invalid option -$OPTARG" >&2 && exit 1
         ;;
@@ -40,7 +43,12 @@ OUTPUT_IMG_WIDTH=0 # Decide size to cover all screens
 OUTPUT_IMG_HEIGHT=0 # Decide size to cover all screens
 
 #i3lock command
-LOCK_BASE_CMD="i3lock -i $OUTPUT_IMG"
+if [ "$lock_cmd" ]; then
+        LOCK_BASE_CMD="$lock_cmd"
+else
+        LOCK_BASE_CMD="i3lock -i $OUTPUT_IMG"
+fi
+
 if [ "$lock_args" ]; then
         LOCK_ARGS="$lock_args"  # Passed command
 else
