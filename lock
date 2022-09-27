@@ -2,7 +2,7 @@
 
 #Constants
 DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dimensions
-PARAMS="-colorspace sRGB" # ensure that images are created in the correct colorspace
+PARAMS="-colorspace sRGB" # ensure that images are created in sRGB colorspace, to avoid greyscale output
 CACHE_FOLDER="$HOME"/.cache/i3lock-multimonitor/img/ # Cache folder
 if ! [ -e $CACHE_FOLDER ]; then
     mkdir -p $CACHE_FOLDER
