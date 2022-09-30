@@ -15,7 +15,7 @@ fi
 
 # Create the cache folder if it does not exist
 if ! [ -e $CACHE_FOLDER ]; then
-    mkdir -p $DEFAULT_CACHE_FOLDER
+    mkdir -p $CACHE_FOLDER
 fi
 
 #Passed arguments
