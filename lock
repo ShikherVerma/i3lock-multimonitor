@@ -4,7 +4,16 @@
 DISPLAY_RE="([0-9]+)x([0-9]+)\\+([0-9]+)\\+([0-9]+)" # Regex to find display dimensions
 PARAMS="-colorspace sRGB" # ensure that images are created in sRGB colorspace, to avoid greyscale output
 DEFAULT_CACHE_FOLDER="$HOME"/.cache/i3lock-multimonitor/img/ # Cache folder
-CACHE_FOLDER=$XDG_CACHE_HOME
+
+# Use XDG cache folder if that variable is set.
+if [ -z "$XDG_CACHE_HOME" ]
+then
+    CACHE_FOLDER=$DEFAULT_CACHE_FOLDER
+else
+    CACHE_FOLDER=$XDG_CACHE_HOME
+fi
+
+# Create the cache folder if it does not exist
 if ! [ -e $CACHE_FOLDER ]; then
     mkdir -p $DEFAULT_CACHE_FOLDER
 fi
